@@ -33,7 +33,7 @@ class MeshtasticBot:
 
     user_prefs_persistence: AbstractUserPrefsPersistence
 
-    storage_api: StorageAPIWrapper
+    storage_apis: list[StorageAPIWrapper]
 
     def __init__(self, address: str):
         self.address = address
@@ -48,7 +48,7 @@ class MeshtasticBot:
         self.node_info = None
         self.command_logger = None
         self.user_prefs_persistence = None
-        self.storage_api = None
+        self.storage_apis = []
 
         pub.subscribe(self.on_receive, "meshtastic.receive")
         pub.subscribe(self.on_receive_text, "meshtastic.receive.text")
@@ -160,10 +160,9 @@ class MeshtasticBot:
                 logging.error(f"Error handling message: {e}")
 
     def on_receive(self, packet: MeshPacket, interface):
-
-        if self.storage_api:
+        for storage_api in self.storage_apis:
             try:
-                self.storage_api.store_raw_packet(packet)
+                storage_api.store_raw_packet(packet)
             except HTTPError as ex:
                 logging.warning(f"Error storing packet: {ex.response.text}")
                 pass
@@ -203,9 +202,9 @@ class MeshtasticBot:
             self.node_db.store_node(mesh_node)
             self.node_info.update_last_heard(mesh_node.user.id, last_heard)
 
-            if self.storage_api:
+            for storage_api in self.storage_apis:
                 try:
-                    self.storage_api.store_node(mesh_node)
+                    storage_api.store_node(mesh_node)
                 except HTTPError as ex:
                     logging.warning(f"Error storing node: {ex.response.text}")
                     pass
