@@ -57,9 +57,9 @@ def main():
     node_info = InMemoryNodeInfoStore()
     bot.node_info = node_info
     if STORAGE_API_ROOT:
-        bot.storage_apis.append(StorageAPIWrapper(STORAGE_API_ROOT, STORAGE_API_TOKEN, STORAGE_API_VERSION, failed_packets_dir))
+        bot.storage_apis.append(StorageAPIWrapper(bot, STORAGE_API_ROOT, STORAGE_API_TOKEN, STORAGE_API_VERSION, failed_packets_dir))
     if STORAGE_API_2_ROOT:
-        bot.storage_apis.append(StorageAPIWrapper(STORAGE_API_2_ROOT, STORAGE_API_2_TOKEN, STORAGE_API_2_VERSION, failed_packets_dir))
+        bot.storage_apis.append(StorageAPIWrapper(bot, STORAGE_API_2_ROOT, STORAGE_API_2_TOKEN, STORAGE_API_2_VERSION, failed_packets_dir))
 
     try:
         node_info.load_from_file(str(node_info_file))

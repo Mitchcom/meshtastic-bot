@@ -27,6 +27,7 @@ class MeshtasticBot:
     init_complete: bool
 
     my_id: str
+    my_nodenum: int
     node_db: AbstractNodeDB
     node_info: AbstractNodeInfoStore
     command_logger: AbstractCommandLogger
@@ -44,6 +45,7 @@ class MeshtasticBot:
         self.init_complete = False
 
         self.my_id = None
+        self.my_nodenum = None
         self.node_db = None
         self.node_info = None
         self.command_logger = None
@@ -104,8 +106,8 @@ class MeshtasticBot:
             logging.warning(f"Failed to close connection. Continuing anyway: {ex}")
 
     def on_connection(self, interface, topic=pub.AUTO_TOPIC):
-        my_nodenum = interface.localNode.nodeNum  # in dec
-        self.my_id = f"!{hex(my_nodenum)[2:]}"
+        self.my_nodenum = interface.localNode.nodeNum  # in dec
+        self.my_id = f"!{hex(self.my_nodenum)[2:]}"
 
         self.init_complete = True
         logging.info('Connected to Meshtastic node')
@@ -194,6 +196,11 @@ class MeshtasticBot:
                 f"Received packet from self: {recipient.long_name if recipient else recipient_id} (port {portnum})")
 
     def on_node_updated(self, node, interface):
+        if interface.localNode and self.my_nodenum is None:
+            self.my_nodenum = interface.localNode.nodeNum
+            self.my_id = f"!{hex(self.my_nodenum)[2:]}"
+
+        
         # Check if the node is a new user
         if node['user'] is not None:
             mesh_node = MeshNode.from_dict(node)

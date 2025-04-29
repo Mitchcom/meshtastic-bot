@@ -18,22 +18,32 @@ from src.data_classes import MeshNode
 class StorageAPIWrapper(BaseAPIWrapper):
     failed_packets_dir: Path
 
-    _api_paths_v1 = {
-        'raw_packet': '/api/raw-packet/',
-        'nodes': '/api/nodes/',
-        'node_by_id': '/api/nodes/',
-    }
-    _api_paths_v2 = {
-        'raw_packet': '/api/packets/ingest/',
-        'nodes': '/api/packets/nodes/',
-        'node_by_id': '/api/nodes/',
-    }
-
-    def __init__(self, base_url: str, token: str = None, api_version: int = 1, failed_packets_dir: str = None):
+    def __init__(self, bot, base_url: str, token: str = None, api_version: int = 1, failed_packets_dir: str = None):
         super().__init__(base_url, token)
+        self.bot = bot
         self.failed_packets_dir = Path(failed_packets_dir) if failed_packets_dir else None
         self.api_version = api_version
-        self.api_paths = self._api_paths_v1 if self.api_version == 1 else self._api_paths_v2
+
+    def _get_url(self, path: str, args: dict = None):
+        if args is None:
+            args = {}
+            
+        if self.api_version == 1:
+            api_paths = {
+                'raw_packet': '/api/raw-packet/',
+                'nodes': '/api/nodes/',
+                'node_by_id': f'/api/nodes/{args.get("node_id", "")}',
+            }
+        else:
+            my_nodenum = self.bot.my_nodenum
+            api_paths = {
+                'raw_packet': f'/api/packets/{my_nodenum}/ingest/',
+                'nodes': f'/api/packets/{my_nodenum}/nodes/',
+                'node_by_id': f'/api/nodes/{args.get("node_id", "")}',
+            }
+
+        return api_paths[path]
+
 
     @classmethod
     def _sanitise_raw_packet(cls, data):
@@ -65,7 +75,7 @@ class StorageAPIWrapper(BaseAPIWrapper):
 
         logging.debug(f"Storing packet: {packet}")
         try:
-            response = self._post(self.api_paths['raw_packet'], json=packet)
+            response = self._post(self._get_url('raw_packet'), json=packet)
         except HTTPError as ex:
             logging.error(f"Error storing packet: {ex.response.text}")
             logging.error(f"Packet: {packet}")
@@ -83,7 +93,7 @@ class StorageAPIWrapper(BaseAPIWrapper):
         """
         Get a list of all nodes stored in the storage API. This list generally does not include position or metrics data.
         """
-        response = self._get(self.api_paths['nodes'])
+        response = self._get(self._get_url('nodes'))
         response_json = response.json()
 
         return [MeshNodeSerializer.from_api_dict(node_data) for node_data in response_json]
@@ -97,7 +107,7 @@ class StorageAPIWrapper(BaseAPIWrapper):
 
         node_data = MeshNodeSerializer.to_api_dict(node)
 
-        response = self._post(self.api_paths['nodes'], json=node_data)
+        response = self._post(self._get_url('nodes'), json=node_data)
         return response.json()
 
     def get_node_by_id(self, node_id: Union[int, str], include_positions=0, include_metrics=0) -> MeshNode | None:
@@ -108,7 +118,7 @@ class StorageAPIWrapper(BaseAPIWrapper):
         @param include_positions: How many positions history items to include in the response
         @param include_metrics: How many device metrics history items to include in the response
         """
-        response = self._get(f"{self.api_paths['node_by_id']}{node_id}?positions={include_positions}&metrics={include_metrics}")
+        response = self._get(f"{self._get_url('node_by_id', node_id=node_id)}?positions={include_positions}&metrics={include_metrics}")
         response_json = response.json()
 
         if response_json:

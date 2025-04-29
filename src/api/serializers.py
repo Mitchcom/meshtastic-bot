@@ -26,12 +26,12 @@ class PositionSerializer(AbstractModelSerializer):
     @classmethod
     def to_api_dict(cls, position: MeshNode.Position) -> dict:
         return {
-            "logged_time": cls.date_to_api(position.logged_time),
-            "reported_time": cls.date_to_api(position.reported_time),
+            "logged_time": cls.date_to_api(position.logged_time),  # api v1 compatibility
+            "reported_time": cls.date_to_api(position.reported_time),  # api v2 compatibility
             "latitude": position.latitude,
             "longitude": position.longitude,
             "altitude": position.altitude,
-            "location_source": position.location_source,
+            "location_source": position.location_source or "LOC_UNKNOWN",
         }
 
     @classmethod
@@ -50,7 +50,8 @@ class DeviceMetricsSerializer(AbstractModelSerializer):
     @classmethod
     def to_api_dict(cls, device_metrics: MeshNode.DeviceMetrics) -> dict:
         return {
-            "logged_time": cls.date_to_api(device_metrics.logged_time),
+            "logged_time": cls.date_to_api(device_metrics.logged_time),  # api v1 compatibility
+            "reported_time": cls.date_to_api(device_metrics.logged_time),  # api v2 compatibility
             "battery_level": device_metrics.battery_level,
             "voltage": device_metrics.voltage,
             "channel_utilization": device_metrics.channel_utilization,
