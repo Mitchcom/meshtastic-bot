@@ -5,15 +5,26 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+# Load environment variables from .env file before anything else
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - [%(levelname)s] %(module)s.%(funcName)s - %(message)s',
+                    stream=sys.stdout)
+
+# Set the log level for specific modules
+logging.getLogger('tcp_interface').setLevel(logging.WARNING)
+logging.getLogger('stream_interface').setLevel(logging.WARNING)
+logging.getLogger('mesh_interface').setLevel(logging.WARNING)
+
+# Now we can import the rest of our local files
 from src.api.StorageAPI import StorageAPIWrapper
 from src.bot import MeshtasticBot
 from src.persistence.commands_logger import SqliteCommandLogger
 from src.persistence.node_info import InMemoryNodeInfoStore
 from src.persistence.node_db import SqliteNodeDB
 from src.persistence.user_prefs import SqliteUserPrefsPersistence
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Get the IP address and admin nodes from environment variables
 MESHTASTIC_IP = os.getenv("MESHTASTIC_IP")
@@ -25,16 +36,6 @@ STORAGE_API_VERSION = int(os.getenv("STORAGE_API_VERSION", 1))
 STORAGE_API_2_ROOT = os.getenv("STORAGE_API_2_ROOT")
 STORAGE_API_2_TOKEN = os.getenv("STORAGE_API_2_TOKEN", None)
 STORAGE_API_2_VERSION = int(os.getenv("STORAGE_API_2_VERSION", 1))
-
-# Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - [%(levelname)s] %(module)s.%(funcName)s - %(message)s',
-                    stream=sys.stdout)
-
-# Set the log level for specific modules
-logging.getLogger('tcp_interface').setLevel(logging.WARNING)
-logging.getLogger('stream_interface').setLevel(logging.WARNING)
-logging.getLogger('mesh_interface').setLevel(logging.WARNING)
 
 
 def main():

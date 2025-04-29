@@ -15,6 +15,7 @@ from src.helpers import pretty_print_last_heard, safe_encode_node_name
 from src.persistence.commands_logger import AbstractCommandLogger
 from src.persistence.node_db import AbstractNodeDB
 from src.persistence.node_info import AbstractNodeInfoStore
+from src.persistence.packet_dump import dump_packet
 from src.persistence.user_prefs import AbstractUserPrefsPersistence
 from src.responders.responder_factory import ResponderFactory
 from src.tcp_interface import AutoReconnectTcpInterface, SupportsMessageReactionInterface
@@ -162,6 +163,9 @@ class MeshtasticBot:
                 logging.error(f"Error handling message: {e}")
 
     def on_receive(self, packet: MeshPacket, interface):
+        # dump the packet to disk (if enabled)
+        dump_packet(packet)
+
         for storage_api in self.storage_apis:
             try:
                 storage_api.store_raw_packet(packet)
@@ -200,7 +204,6 @@ class MeshtasticBot:
             self.my_nodenum = interface.localNode.nodeNum
             self.my_id = f"!{hex(self.my_nodenum)[2:]}"
 
-        
         # Check if the node is a new user
         if node['user'] is not None:
             mesh_node = MeshNode.from_dict(node)
