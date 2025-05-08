@@ -1,110 +1,112 @@
 # Meshtastic Bot
 
-Meshtastic Bot is a Python-based bot designed to interact with Meshtastic devices. It listens for messages, processes
-commands, and responds with appropriate actions.
+Meshtastic Bot is a Python-based bot for interacting with Meshtastic devices. It listens for messages, processes commands, and responds with appropriate actions. This guide is focused on helping you run the bot as-is, with minimal setup.
 
-## Features
+## Quick Start: Run with Docker
 
-- Handles commands via private messages
-- Supports responders on public channels
-- Stores various statistics about the network
+The easiest way to run Meshtastic Bot is using Docker. This method requires minimal setup and keeps your environment clean.
 
-## Installation
+### 1. Prepare Your Environment
 
-1. Clone the repository:
+- Ensure you have [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed.
+- Create a `.env` file in your project directory with the required environment variables:
+
+```
+MESHTASTIC_NODE_IP=your_meshtastic_node_ip
+ADMIN_NODES=comma_separated_admin_node_ids
+STORAGE_API_ROOT=your_storage_api_url
+STORAGE_API_TOKEN=your_storage_api_token
+# Optionally, you can upload to a second API as well
+STORAGE_API_2_ROOT=your_storage_api_2_url
+STORAGE_API_2_TOKEN=your_storage_api_2_token
+```
+
+### 2. Use This `docker-compose.yaml`
+
+```yaml
+version: '3.8'
+
+services:
+  bot:
+    image: ghcr.io/pskillen/meshtastic-bot:latest
+    container_name: meshtastic-bot
+    restart: unless-stopped
+    environment:
+      - MESHTASTIC_IP=${MESHTASTIC_NODE_IP}
+      - ADMIN_NODES=${ADMIN_NODES}
+      - STORAGE_API_ROOT=${STORAGE_API_ROOT}
+      - STORAGE_API_TOKEN=${STORAGE_API_TOKEN}
+      - STORAGE_API_VERSION=2
+      - STORAGE_API_2_ROOT=${STORAGE_API_2_ROOT}
+      - STORAGE_API_2_TOKEN=${STORAGE_API_2_TOKEN}
+      - STORAGE_API_2_VERSION=2
+    volumes:
+      - mesh_bot_data:/app/data
+
+volumes:
+  mesh_bot_data:
+```
+
+### 3. Start the Bot
+
+```sh
+docker compose up -d
+```
+
+The bot will now run in the background. Data will be persisted locally in the `mesh_bot_data` Docker volume.
+
+---
+
+## Native Installation (Advanced/Development)
+
+If you prefer to run the bot natively (e.g., for development or customization):
+
+1. **Clone the repository:**
     ```sh
     git clone https://github.com/yourusername/meshtastic-bot.git
     cd meshtastic-bot
     ```
-
-2. Install the required Python packages:
+2. **Install dependencies:**
     ```sh
     pip install -r requirements.txt
     ```
-
-3. If installing on a Raspberry Pi you may need to install the following packages:
+3. **(Optional) On Raspberry Pi:**
     ```sh
     sudo apt-get install libopenblas-dev
     ```
-
-## Usage
-
-1. Copy .env.example to .env and fill in the required values.
-
-2. Run the bot:
+4. **Configure environment:**
+    - Copy `.env.example` to `.env` and fill in the required values.
+5. **Run the bot:**
     ```sh
     python main.py
     ```
 
-## Commands
+---
 
-Commands are instructions which a user can send to the bot. The bot will parse the message and execute the appropriate
-command handler.
+## Usage
+
+The bot listens for messages and responds to commands. You can interact with it via supported Meshtastic channels.
 
 ### Supported Commands
 
-| Command   | Handler        | Description                                    |
-|-----------|----------------|------------------------------------------------|
-| `!help`   | `HelpCommand`  | Displays a list of available commands          |
-| `!hello`  | `HelloCommand` | Displays information about the bot             |
-| `!ping`   | `PingCommand`  | Responds with "Pong!"                          |
-| `!nodes`  | `NodesCommand` | Displays a list of connected nodes, stats, etc |     
-| `!whoami` | `WhoAmI`       | Displays information about the sender          |
+| Command   | Description                                    |
+|-----------|------------------------------------------------|
+| `!help`   | Displays a list of available commands          |
+| `!hello`  | Displays information about the bot             |
+| `!ping`   | Responds with "Pong!"                          |
+| `!nodes`  | Displays a list of connected nodes, stats, etc |
+| `!whoami` | Displays information about the sender          |
 
-### Adding Commands
+---
 
-Commands are configured via the [CommandFactory](src/commands/command_factory.py) class.
-The [TemplateCommand](src/commands/template_command.py) class provides a template for creating new commands.
+## Extending the Bot (Development)
 
-Example:
+If you want to add new commands or responders, see the `src/commands/` and `src/responders/` directories. The codebase is structured for easy extension, but most users will not need to modify the code to run the bot.
 
-```python
-# src/commands/factory.py
+- **Commands:** Add new command classes and register them in the command factory.
+- **Responders:** Inherit from `AbstractResponder` to handle public channel messages.
 
-class CommandFactory:
-   commands = {
-      "!hi": {
-         "class": "src.commands.template.CustomCommand",
-         "args": []
-      },
-      
-      # ... other commands ...
-   }
-```
-
-
-```python
-# src/commands/custom_command.py
-
-from src.commands.template import TemplateCommand
-
-class CustomCommand(TemplateCommand):
-   def __init__(self, bot: MeshtasticBot):
-      template = "Hi {{ sender_id }}"
-      super().__init__(bot, "hi", template)
-```
-
-
-## Responders
-
-The bot uses responders to handle messages on public channels.
-
-### Adding Responders
-
-You can add custom responders by creating new classes
-that inherit from `AbstractResponder` and implementing the required methods.
-
-Example:
-
-```python
-from src.responders.responder import AbstractResponder
-
-
-class CustomResponder(AbstractResponder):
-   def handle_packet(self, packet):
-      # Custom handling logic
-      pass
-```
+---
 
 ## Contributing
 
