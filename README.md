@@ -24,22 +24,13 @@ STORAGE_API_2_TOKEN=your_storage_api_2_token
 ### 2. Use This `docker-compose.yaml`
 
 ```yaml
-version: '3.8'
-
 services:
   bot:
     image: ghcr.io/pskillen/meshtastic-bot:latest
     container_name: meshtastic-bot
     restart: unless-stopped
-    environment:
-      - MESHTASTIC_IP=${MESHTASTIC_NODE_IP}
-      - ADMIN_NODES=${ADMIN_NODES}
-      - STORAGE_API_ROOT=${STORAGE_API_ROOT}
-      - STORAGE_API_TOKEN=${STORAGE_API_TOKEN}
-      - STORAGE_API_VERSION=2
-      - STORAGE_API_2_ROOT=${STORAGE_API_2_ROOT}
-      - STORAGE_API_2_TOKEN=${STORAGE_API_2_TOKEN}
-      - STORAGE_API_2_VERSION=2
+    env_file:
+      - meshtastic-bot.env
     volumes:
       - mesh_bot_data:/app/data
 
