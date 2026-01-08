@@ -14,8 +14,8 @@ The easiest way to run Meshtastic Bot is using Docker. This method requires mini
 ```
 MESHTASTIC_NODE_IP=your_meshtastic_node_ip
 ADMIN_NODES=comma_separated_admin_node_ids
-STORAGE_API_ROOT=your_storage_api_url
-STORAGE_API_TOKEN=your_storage_api_token
+STORAGE_API_ROOT=https://meshflow.pskillen.xyz
+STORAGE_API_TOKEN=your_storage_api_token from above site
 # Optionally, you can upload to a second API as well
 STORAGE_API_2_ROOT=your_storage_api_2_url
 STORAGE_API_2_TOKEN=your_storage_api_2_token
