@@ -76,17 +76,18 @@ If you prefer to run the bot natively (e.g., for development or customization):
 
 ## Usage
 
-The bot listens for messages and responds to commands. You can interact with it via supported Meshtastic channels.
+The bot listens for messages and responds to commands as a direct message. You can interact with it via supported Meshtastic channels.
 
 ### Supported Commands
 
-| Command   | Description                                    |
-|-----------|------------------------------------------------|
-| `!help`   | Displays a list of available commands          |
-| `!hello`  | Displays information about the bot             |
-| `!ping`   | Responds with "Pong!"                          |
-| `!nodes`  | Displays a list of connected nodes, stats, etc |
-| `!whoami` | Displays information about the sender          |
+| Command   | Description                                                   |
+|-----------|---------------------------------------------------------------|
+| `!help`   | Displays a list of available commands                         |
+| `!hello`  | Displays information about the bot                            |
+| `!ping`   | Responds with "Pong!"                                         |
+| `!nodes`  | Displays a list of connected nodes, stats, etc                |
+| `!whoami` | Displays information about the sender                         |
+| `!tr`     | Responds with a hop count followed by the Traceroute          |
 
 ---
 
