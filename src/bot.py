@@ -193,7 +193,7 @@ class MeshtasticBot:
 
         requester_id = self.pending_traces.pop(target_id)
         
-        # Format the route
+        # Format the OUTBOUND route
         route_ids = route.route
         hops = []
         for node_id_int in route_ids:
@@ -207,8 +207,11 @@ class MeshtasticBot:
 
         route_str = " -> ".join(hops) if hops else "Direct (or unknown)"
         
-        response = f"Trace to {target_id}:\nOut: {route_str}"
+        response_out = f"Trace TO {target_id} ({len(hops)} hops):\n{route_str}"
+        logging.info(f"Sending traceroute OUT result to {requester_id}: {response_out}")
+        self.interface.sendText(response_out, destinationId=requester_id)
         
+        # Format the INBOUND route (if available)
         if hasattr(route, 'route_back') and route.route_back:
             hops_back = []
             for node_id_int in route.route_back:
@@ -219,10 +222,12 @@ class MeshtasticBot:
                  else:
                      hops_back.append(f"{node_id_str}")
             back_str = " -> ".join(hops_back)
-            response += f"\nIn: {back_str}"
             
-        logging.info(f"Sending traceroute result to {requester_id}: {response}")
-        self.interface.sendText(response, destinationId=requester_id)
+            response_in = f"Trace FROM {target_id} ({len(hops_back)} hops):\n{back_str}"
+            logging.info(f"Sending traceroute IN result to {requester_id}: {response_in}")
+            # Small delay to ensure order
+            time.sleep(1) 
+            self.interface.sendText(response_in, destinationId=requester_id)
 
     def on_receive(self, packet: MeshPacket, interface):
         if packet.get('fromId') == '!69828b98':
