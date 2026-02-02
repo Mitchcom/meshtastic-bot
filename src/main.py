@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -29,7 +30,10 @@ from src.tcp_proxy import TcpProxy
 
 # Get the IP address and admin nodes from environment variables
 MESHTASTIC_IP = os.getenv("MESHTASTIC_IP")
-ADMIN_NODES = os.getenv("ADMIN_NODES").split(',')
+# Safely handle missing or empty ADMIN_NODES
+admin_nodes_raw = os.getenv("ADMIN_NODES") or ""
+ADMIN_NODES = [node.strip() for node in admin_nodes_raw.split(',') if node.strip()]
+
 DATA_DIR = os.getenv("DATA_DIR", "data")
 STORAGE_API_ROOT = os.getenv("STORAGE_API_ROOT")
 STORAGE_API_TOKEN = os.getenv("STORAGE_API_TOKEN", None)
@@ -54,6 +58,9 @@ def main():
     # It listens on 0.0.0.0:4403 and forwards to MESHTASTIC_IP:4403
     proxy = TcpProxy(target_host=MESHTASTIC_IP, target_port=4403, listen_host='0.0.0.0', listen_port=4403)
     proxy.start()
+    
+    # Give the proxy a moment to bind to the port before the bot tries to connect
+    time.sleep(2)
 
     # Connect to the Meshtastic node via the LOCAL PROXY
     # We use 'localhost' because the proxy is running in this same container/process
