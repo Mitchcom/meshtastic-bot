@@ -25,6 +25,7 @@ from src.persistence.commands_logger import SqliteCommandLogger
 from src.persistence.node_info import InMemoryNodeInfoStore
 from src.persistence.node_db import SqliteNodeDB
 from src.persistence.user_prefs import SqliteUserPrefsPersistence
+from src.tcp_proxy import TcpProxy
 
 # Get the IP address and admin nodes from environment variables
 MESHTASTIC_IP = os.getenv("MESHTASTIC_IP")
@@ -49,8 +50,14 @@ def main():
     node_info_file = data_dir / 'node_info.json'
     failed_packets_dir = data_dir / 'failed_packets'
 
-    # Connect to the Meshtastic node over WiFi
-    bot = MeshtasticBot(MESHTASTIC_IP)
+    # Start the TCP Proxy
+    # It listens on 0.0.0.0:4403 and forwards to MESHTASTIC_IP:4403
+    proxy = TcpProxy(target_host=MESHTASTIC_IP, target_port=4403, listen_host='0.0.0.0', listen_port=4403)
+    proxy.start()
+
+    # Connect to the Meshtastic node via the LOCAL PROXY
+    # We use 'localhost' because the proxy is running in this same container/process
+    bot = MeshtasticBot('localhost')
     bot.admin_nodes = ADMIN_NODES
     bot.user_prefs_persistence = SqliteUserPrefsPersistence(str(user_prefs_file))
     bot.command_logger = SqliteCommandLogger(str(command_log_file))

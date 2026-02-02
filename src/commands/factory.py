@@ -7,6 +7,10 @@ class CommandFactory:
             "class": "src.commands.ping.PingCommand",
             "args": []
         },
+        "!tr": {
+            "class": "src.commands.tr.TracerouteCommand",
+            "args": []
+        },
         "!hello": {
             "class": "src.commands.hello.HelloCommand",
             "args": []

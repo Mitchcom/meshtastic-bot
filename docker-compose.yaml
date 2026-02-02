@@ -1,19 +1,14 @@
 ---
 
 services:
-  meshtastic-bot:
-    image: ghcr.io/pskillen/meshtastic-bot:latest
-    build:
-      context: "./"
+  bot:
+    build: .
     container_name: meshtastic-bot
     restart: unless-stopped
+    ports:
+      - "4403:4403"
     environment:
-      - MESHTASTIC_IP=meshtastic.local
-      - ADMIN_NODES='!aae8900d'  # Change this, unless you want me to be the admin of your bot
-    volumes:
-      - ./data:/app/data
-    depends_on:
-      - watchtower
+      - MESHTASTIC_IP=${MESHTASTIC_NODE_IP}
 
   watchtower:
     image: containrrr/watchtower

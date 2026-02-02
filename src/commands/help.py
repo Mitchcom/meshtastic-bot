@@ -9,6 +9,7 @@ class HelpCommand(AbstractCommandWithSubcommands):
         super().__init__(bot, 'help')
         self.sub_commands['hello'] = self.handle_hello
         self.sub_commands['ping'] = self.handle_ping
+        self.sub_commands['tr'] = self.handle_tr
         self.sub_commands['nodes'] = self.handle_nodes
         self.sub_commands['whoami'] = self.handle_whoami
         self.sub_commands['prefs'] = self.handle_prefs
@@ -20,7 +21,10 @@ class HelpCommand(AbstractCommandWithSubcommands):
         subcmds = filter(None, subcmds)  # remove empty strings
         subcmds = [f"!{cmd}" for cmd in subcmds]
 
-        response = f"Valid commands are: {', '.join(subcmds)}"
+        response = (
+            f"Available via Direct Message: {', '.join(subcmds)}. "
+            f"Available in Public Channels: !tr (replies via DM)."
+        )
         self.reply(packet, response)
 
     def handle_hello(self, packet: MeshPacket, args: list[str]) -> None:
@@ -29,6 +33,10 @@ class HelpCommand(AbstractCommandWithSubcommands):
 
     def handle_ping(self, packet: MeshPacket, args: list[str]) -> None:
         response = "!ping (+ optional correlation message): responds with a pong"
+        self.reply(packet, response)
+
+    def handle_tr(self, packet: MeshPacket, args: list[str]) -> None:
+        response = "!tr: responds with the number of hops and signal strength of your message"
         self.reply(packet, response)
 
     def handle_nodes(self, packet: MeshPacket, args: list[str]) -> None:

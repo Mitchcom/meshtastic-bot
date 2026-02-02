@@ -1,0 +1,14 @@
+#----- Docker Compose.yaml ------  
+services:
+  bot:
+    image: ghcr.io/pskillen/meshtastic-bot:latest
+    container_name: meshtastic-bot
+    restart: unless-stopped
+    env_file:
+      - meshtastic-bot.env
+    volumes:
+      - ./src:/app/src
+      - mesh_bot_data:/app/data
+
+volumes:
+  mesh_bot_data:
