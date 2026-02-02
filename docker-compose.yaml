@@ -8,7 +8,7 @@ services:
     ports:
       - "4403:4403"
     environment:
-      - MESHTASTIC_IP=${MESHTASTIC_IP}
+      - MESHTASTIC_IP=192.168.4.210
 
   watchtower:
     image: containrrr/watchtower
