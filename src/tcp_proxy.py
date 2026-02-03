@@ -78,16 +78,13 @@ class TcpProxy:
         if not self.running:
             return
 
-        inputs = [self.server_socket, self.target_socket]
-        start_time = time.time()
-        last_target_activity = time.time()
-        watchdog_timeout = 300.0  # Reconnect if no data from target for 5 minutes
-        last_heartbeat_log = time.time()
-
         while self.running:
             try:
                 # Filter out closed sockets from inputs
-                current_inputs = [s for s in inputs + self.clients if s.fileno() != -1]
+                # We rebuild the list of inputs every time to ensure we are using the current target_socket
+                # (which might have changed after a reconnect)
+                inputs = [self.server_socket, self.target_socket]
+                current_inputs = [s for s in inputs + self.clients if s and s.fileno() != -1]
                 readable, _, _ = select.select(current_inputs, [], [], 1.0)
             except Exception as e:
                 logging.error(f"Select error: {e}")
