@@ -1,8 +1,11 @@
 import logging
 from datetime import datetime, timezone
-from src.commands.command import Command
+from src.commands.command import AbstractCommand
 
-class StatusCommand(Command):
+class StatusCommand(AbstractCommand):
+    def __init__(self, bot):
+        super().__init__(bot, "!status")
+
     def handle_packet(self, packet):
         from_id = packet.get('fromId')
         
@@ -37,5 +40,8 @@ class StatusCommand(Command):
         )
 
         logging.info(f"Sending status to {from_id}")
-        self.bot.interface.sendText(response, destinationId=from_id)
+        self.reply_in_dm(packet, response)
+
+    def get_command_for_logging(self, message: str) -> (str, list[str] | None, str | None):
+        return self._gcfl_just_base_command(message)
 
