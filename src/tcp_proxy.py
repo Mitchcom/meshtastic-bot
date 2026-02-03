@@ -78,6 +78,11 @@ class TcpProxy:
         if not self.running:
             return
 
+        start_time = time.time()
+        last_target_activity = time.time()
+        watchdog_timeout = 300.0  # Reconnect if no data from target for 5 minutes
+        last_heartbeat_log = time.time()
+
         while self.running:
             try:
                 # Filter out closed sockets from inputs
