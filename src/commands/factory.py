@@ -35,6 +35,10 @@ class CommandFactory:
             "class": "src.commands.admin.AdminCommand",
             "args": []
         },
+        "!status": {
+            "class": "src.commands.status.StatusCommand",
+            "args": []
+        },
         # "!enroll": {
         #     "class": "src.commands.enroll.EnrollCommandHandler",
         #     "args": ["enroll"]

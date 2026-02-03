@@ -39,6 +39,8 @@ class MeshtasticBot:
 
     def __init__(self, address: str):
         self.address = address
+        self.start_time = datetime.now(timezone.utc)
+        self.proxy = None
 
         self.admin_nodes = []
 

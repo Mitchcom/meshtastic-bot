@@ -37,6 +37,17 @@ class TcpProxy:
             except:
                 pass
 
+    def get_status(self):
+        if not self.running:
+            return "Proxy: Offline"
+        
+        silence = time.time() - self.last_target_activity if hasattr(self, 'last_target_activity') else 0
+        return {
+            "connected": self.target_socket is not None and self.target_socket.fileno() != -1,
+            "clients": len(self.clients),
+            "silence_secs": int(silence)
+        }
+
     def _run(self):
         logging.info(f"Starting TCP Proxy on {self.listen_host}:{self.listen_port} -> {self.target_host}:{self.target_port}")
 

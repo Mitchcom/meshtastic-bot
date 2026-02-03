@@ -65,6 +65,7 @@ def main():
     # Connect to the Meshtastic node via the LOCAL PROXY
     # We use 'localhost' because the proxy is running in this same container/process
     bot = MeshtasticBot('localhost')
+    bot.proxy = proxy
     bot.admin_nodes = ADMIN_NODES
     bot.user_prefs_persistence = SqliteUserPrefsPersistence(str(user_prefs_file))
     bot.command_logger = SqliteCommandLogger(str(command_log_file))

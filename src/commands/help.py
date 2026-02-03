@@ -13,6 +13,7 @@ class HelpCommand(AbstractCommandWithSubcommands):
         self.sub_commands['nodes'] = self.handle_nodes
         self.sub_commands['whoami'] = self.handle_whoami
         self.sub_commands['prefs'] = self.handle_prefs
+        self.sub_commands['status'] = self.handle_status
         # self.sub_commands['enroll'] = self.handle_enroll
         # self.sub_commands['leave'] = self.handle_leave
 
@@ -61,6 +62,10 @@ class HelpCommand(AbstractCommandWithSubcommands):
 
     def handle_leave(self, packet: MeshPacket, args: list[str]) -> None:
         response = "!leave: bot will not respond to you on public channels"
+        self.reply(packet, response)
+
+    def handle_status(self, packet: MeshPacket, args: list[str]) -> None:
+        response = "!status: show current bot and proxy health status"
         self.reply(packet, response)
 
     def get_command_for_logging(self, message: str) -> (str, list[str] | None, str | None):
