@@ -23,7 +23,7 @@ class HelpCommand(AbstractCommandWithSubcommands):
         subcmds = [f"!{cmd}" for cmd in subcmds]
 
         response = (
-            f"Available via Direct Message: {', '.join(subcmds)}. "
+            f"Available via Direct Message: {', '.join(subcmds)}.\n"
             f"Available in Public Channels: !tr (replies via DM)."
         )
         self.reply(packet, response)
