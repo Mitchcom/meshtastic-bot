@@ -69,6 +69,9 @@ class TcpProxy:
 
         inputs = [self.server_socket, self.target_socket]
         start_time = time.time()
+        last_target_activity = time.time()
+        watchdog_timeout = 60.0  # Reconnect if no data from target for 60s
+        last_heartbeat_log = time.time()
 
         while self.running:
             try:
@@ -81,8 +84,39 @@ class TcpProxy:
                 self.clients = [c for c in self.clients if c.fileno() != -1]
                 continue
 
+            current_time = time.time()
+
+            # Heartbeat Logging & Watchdog Check
+            if current_time - last_heartbeat_log > 60.0:
+                silence_duration = current_time - last_target_activity
+                logging.info(f"Proxy Heartbeat: Connected. Last data from radio {silence_duration:.1f}s ago. Clients: {len(self.clients)}")
+                last_heartbeat_log = current_time
+            
+            # Watchdog: Force reconnect if silence is too long
+            if current_time - last_target_activity > watchdog_timeout:
+                logging.warning(f"Watchdog: No data from radio for {watchdog_timeout}s. Forcing reconnect...")
+                try:
+                    self.target_socket.close()
+                except:
+                    pass
+                
+                # Reconnect logic
+                reconnected = False
+                backoff = 1
+                while self.running and not reconnected:
+                    try:
+                        self.target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        self.target_socket.connect((self.target_host, self.target_port))
+                        logging.info("Watchdog: Reconnected to target successfully.")
+                        last_target_activity = time.time() # Reset timer
+                        reconnected = True
+                    except Exception as ex:
+                        logging.error(f"Watchdog reconnect failed: {ex}. Retrying in {backoff}s...")
+                        time.sleep(backoff)
+                        backoff = min(backoff * 2, 10)
+
             # Check for init buffer timeout
-            if not self.init_buffer_done and (time.time() - start_time > self.buffer_time):
+            if not self.init_buffer_done and (current_time - start_time > self.buffer_time):
                 self.init_buffer_done = True
                 if self.init_buffer:
                     logging.info(f"Init buffer capture finished. Size: {len(self.init_buffer)} bytes")
@@ -104,6 +138,7 @@ class TcpProxy:
                          logging.error(f"Error accepting connection: {e}")
 
                 elif sock is self.target_socket:
+                    last_target_activity = time.time() # Update activity timestamp
                     try:
                         data = self.target_socket.recv(4096)
                         if not data:
