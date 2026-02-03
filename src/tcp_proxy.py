@@ -81,7 +81,7 @@ class TcpProxy:
         inputs = [self.server_socket, self.target_socket]
         start_time = time.time()
         last_target_activity = time.time()
-        watchdog_timeout = 60.0  # Reconnect if no data from target for 60s
+        watchdog_timeout = 300.0  # Reconnect if no data from target for 5 minutes
         last_heartbeat_log = time.time()
 
         while self.running:
