@@ -87,7 +87,21 @@ The bot listens for messages and responds to commands as a direct message. You c
 | `!ping`   | Responds with "Pong!"                                         |
 | `!nodes`  | Displays a list of connected nodes, stats, etc                |
 | `!whoami` | Displays information about the sender                         |
-| `!tr`     | Responds with a hop count followed by the Traceroute          |
+| `!tr`     | Performs a traceroute to the sender (outbound & inbound)      |
+| `!status` | Displays bot status and radio connection details              |
+
+## Features
+
+### Enhanced Connectivity (TCP Proxy)
+The bot now includes a built-in TCP proxy to manage the connection to the Meshtastic node. This improves stability and allows for automatic reconnection if the radio connection is lost.
+
+### Improved Logging
+Messages received on named Group Channels (e.g., 'LongRange', 'PrivateChat') are now logged with their specific channel name, making it easier to track conversations across different mesh networks.
+
+### Advanced Traceroute
+The `!tr` command has been upgraded to show the full path:
+- **Outbound:** The route from the bot to your node.
+- **Inbound:** The route back from your node to the bot (if available).
 
 ---
 
