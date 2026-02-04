@@ -148,13 +148,27 @@ class MeshtasticBot:
         else:
             self.command_logger.log_unknown_request(from_id, message)
 
+    def get_channel_name(self, packet: MeshPacket) -> str:
+        """Get the name of the channel for a packet."""
+        channel_index = packet.get('channel', 0)
+        try:
+            if self.interface and self.interface.localNode:
+                channel = self.interface.localNode.channels[channel_index]
+                if channel and channel.settings and channel.settings.name:
+                    return channel.settings.name
+        except (AttributeError, IndexError):
+            pass
+        return "Primary" if channel_index == 0 else f"Channel {channel_index}"
+
     def handle_public_message(self, packet: MeshPacket):
-        """Handle public messages."""
+        """Handle public (group channel) messages."""
         message = packet['decoded']['text']
         from_id = packet['fromId']
         sender = self.node_db.get_by_id(from_id)
+        sender_name = sender.long_name if sender else from_id
+        channel_name = self.get_channel_name(packet)
 
-        logging.info(f"DEBUG: Received public message from {sender.long_name if sender else from_id}: {message}")
+        logging.info(f"Received group message on channel '{channel_name}' from {sender_name}: {message}")
 
         # Allow !tr in public channels
         words = message.split()
@@ -233,7 +247,7 @@ class MeshtasticBot:
 
     def on_receive(self, packet: MeshPacket, interface):
         if packet.get('fromId') == '!69828b98':
-            logging.info(f"DEBUG: Received ANY packet from mte4: {packet}")
+            logging.debug(f"Received ANY packet from mte4: {packet}")
 
         # dump the packet to disk (if enabled)
         dump_packet(packet)
