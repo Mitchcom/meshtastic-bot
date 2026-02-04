@@ -338,9 +338,21 @@ class MeshtasticBot:
 
     def report_node_count(self):
         """Report the current node count to a specific channel."""
+        logging.info("Executing report_node_count...")
         if not self.init_complete or not self.interface:
             logging.warning("Skipping node count report: interface not ready.")
             return
+
+        # Debug: Print available channels
+        try:
+            if self.interface.localNode:
+                for idx, ch in enumerate(self.interface.localNode.channels):
+                    if ch and ch.settings and ch.settings.name:
+                        logging.info(f"Channel {idx}: {ch.settings.name}")
+                    elif ch and ch.settings:
+                        logging.info(f"Channel {idx}: [Unnamed/Default]")
+        except Exception as e:
+            logging.warning(f"Could not list channels: {e}")
 
         online_nodes = self.node_info.get_online_nodes()
         count = len(online_nodes)
