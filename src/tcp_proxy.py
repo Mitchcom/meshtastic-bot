@@ -143,7 +143,12 @@ class TcpProxy:
                         # Replay init buffer
                         if self.init_buffer:
                             try:
-                                client_socket.sendall(self.init_buffer)
+                                # Send in chunks to avoid overwhelming the client's startup sequence
+                                chunk_size = 1024
+                                for i in range(0, len(self.init_buffer), chunk_size):
+                                    chunk = self.init_buffer[i:i+chunk_size]
+                                    client_socket.sendall(chunk)
+                                    time.sleep(0.05)  # 50ms delay between chunks
                                 logging.info(f"Sent {len(self.init_buffer)} bytes of cached init data to {addr}")
                             except Exception as e:
                                 logging.error(f"Error sending init buffer to client: {e}")
