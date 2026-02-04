@@ -1,6 +1,7 @@
 import logging
 import sys
 import time
+import threading
 from datetime import datetime, timezone
 
 import schedule
@@ -117,6 +118,10 @@ class MeshtasticBot:
         self.init_complete = True
         logging.info('Connected to Meshtastic node')
         self.print_nodes()
+        
+        # Send an immediate node count report upon connection
+        # We use a timer to delay slightly to ensure everything settles
+        threading.Timer(10.0, self.report_node_count).start()
 
     def on_receive_text(self, packet: MeshPacket, interface):
         """Callback function triggered when a text message is received."""
