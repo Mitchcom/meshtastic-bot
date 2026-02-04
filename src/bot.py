@@ -348,9 +348,10 @@ class MeshtasticBot:
             if self.interface.localNode:
                 for idx, ch in enumerate(self.interface.localNode.channels):
                     if ch and ch.settings and ch.settings.name:
-                        logging.info(f"Channel {idx}: {ch.settings.name}")
+                        role_name = "DISABLED" if ch.role == 0 else "ENABLED"
+                        logging.info(f"Channel {idx}: {ch.settings.name} (Role: {ch.role} / {role_name})")
                     elif ch and ch.settings:
-                        logging.info(f"Channel {idx}: [Unnamed/Default]")
+                        logging.info(f"Channel {idx}: [Unnamed/Default] (Role: {ch.role})")
         except Exception as e:
             logging.warning(f"Could not list channels: {e}")
 
@@ -364,8 +365,8 @@ class MeshtasticBot:
 
         logging.info(f"Reporting node count: {message}")
         try:
-            # Send to Channel 2 as requested
-            self.interface.sendText(message, channelIndex=2)
+            # Send to Channel 2 as requested, enable wantAck to see if radio accepts it
+            self.interface.sendText(message, channelIndex=2, wantAck=True)
         except Exception as e:
             logging.error(f"Failed to report node count: {e}")
 
