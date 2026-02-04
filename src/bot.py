@@ -352,8 +352,8 @@ class MeshtasticBot:
 
         logging.info(f"Reporting node count: {message}")
         try:
-            # Send to Channel 0 (Primary) for testing connectivity
-            self.interface.sendText(message, channelIndex=0, wantAck=True)
+            # Send to Channel 2 (GregPrivate)
+            self.interface.sendText(message, channelIndex=2, wantAck=True)
         except Exception as e:
             logging.error(f"Failed to report node count: {e}")
 
