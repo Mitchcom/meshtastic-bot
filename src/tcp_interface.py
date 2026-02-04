@@ -87,7 +87,7 @@ class AutoReconnectTcpInterface(SupportsMessageReactionInterface, TCPInterface):
             pkiEncrypted: Optional[bool] = False,
             publicKey: Optional[bytes] = None,
     ):
-        logging.info(f"DEBUG: Sending packet to {destinationId} (Payload: {meshPacket.decoded.payload})")
+        logging.debug(f"Sending packet to {destinationId} (Payload: {meshPacket.decoded.payload})")
         try:
             super()._sendPacket(
                 meshPacket=meshPacket,

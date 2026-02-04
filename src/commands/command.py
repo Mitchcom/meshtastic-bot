@@ -20,7 +20,7 @@ class AbstractCommand(AbstractBaseFeature, ABC):
         pass
 
     @deprecated("use reply_in_dm instead")
-    def reply(self, packet: MeshPacket, message: str, want_ack=False) -> None:
+    def reply(self, packet: MeshPacket, message: str, want_ack=True) -> None:
         """
         Reply to a message in the same channel
         This is a deprecated method, use reply_in_channel instead
@@ -28,7 +28,7 @@ class AbstractCommand(AbstractBaseFeature, ABC):
         self.reply_in_dm(packet, message, want_ack)
 
     @deprecated("use message_in_dm instead")
-    def reply_to(self, destination_id: str, message: str, want_ack=False) -> None:
+    def reply_to(self, destination_id: str, message: str, want_ack=True) -> None:
         """
         Reply in a direct message to a user
         This is a deprecated method, use reply_in_dm instead

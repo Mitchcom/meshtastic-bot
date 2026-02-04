@@ -7,6 +7,10 @@ class CommandFactory:
             "class": "src.commands.ping.PingCommand",
             "args": []
         },
+        "!tr": {
+            "class": "src.commands.tr.TracerouteCommand",
+            "args": []
+        },
         "!hello": {
             "class": "src.commands.hello.HelloCommand",
             "args": []
@@ -29,6 +33,10 @@ class CommandFactory:
         },
         "!admin": {
             "class": "src.commands.admin.AdminCommand",
+            "args": []
+        },
+        "!status": {
+            "class": "src.commands.status.StatusCommand",
             "args": []
         },
         # "!enroll": {

@@ -1,4 +1,5 @@
 import logging
+import time
 from abc import ABC
 
 from meshtastic.protobuf.mesh_pb2 import MeshPacket
@@ -29,18 +30,19 @@ class AbstractBaseFeature(ABC):
         logging.debug(f"Sending message: '{message}'")
         self.bot.interface.sendText(message, channelIndex=channel, wantAck=want_ack)
 
-    def reply_in_dm(self, packet: MeshPacket, message: str, want_ack=False) -> None:
+    def reply_in_dm(self, packet: MeshPacket, message: str, want_ack=True) -> None:
         """
         Reply in a direct message to a user
         """
         destination_id = packet['fromId']
         self.message_in_dm(destination_id, message, want_ack)
 
-    def message_in_dm(self, destination_id: str, message: str, want_ack=False) -> None:
+    def message_in_dm(self, destination_id: str, message: str, want_ack=True) -> None:
         """
         Reply in a direct message to a user
         """
         logging.debug(f"Sending DM: '{message}'")
+        time.sleep(1) # Wait a second to let the radio settle
         self.bot.interface.sendText(message, destinationId=destination_id, wantAck=want_ack)
 
     def react_in_channel(self, packet: MeshPacket, emoji: str) -> None:

@@ -66,10 +66,19 @@ class StorageAPIWrapper(BaseAPIWrapper):
         Store a raw packet in the storage API
         """
         # Filter out packet types that the API doesn't support or we don't want to store
-        ignored_ports = [345, 'ROUTING_APP', 'TRACEROUTE_APP', 'ADMIN_APP']
+        ignored_ports = [345, 'ROUTING_APP', 'TRACEROUTE_APP', 'ADMIN_APP', 'NEIGHBORINFO_APP']
         portnum = packet.get('decoded', {}).get('portnum')
         if portnum in ignored_ports:
             return
+            
+        # Additional filtering for Telemetry packets to avoid API errors
+        # The API requires either 'deviceMetrics' or 'localStats'
+        if portnum == 'TELEMETRY_APP':
+            telemetry = packet.get('decoded', {}).get('telemetry', {})
+            if 'deviceMetrics' not in telemetry and 'localStats' not in telemetry:
+                # Log debug instead of error/warning so we know we skipped it but it's not a failure
+                logging.debug("Skipping unsupported TELEMETRY packet (missing deviceMetrics/localStats)")
+                return
 
         # Convert bytes to Base64-encoded strings recursively
         raw_packet: MeshPacket = packet.get('raw')
