@@ -331,6 +331,27 @@ class MeshtasticBot:
 
         logging.info(f"- Plus {len(offline_nodes)} offline nodes")
 
+    def report_node_count(self):
+        """Report the current node count to a specific channel."""
+        if not self.init_complete or not self.interface:
+            logging.warning("Skipping node count report: interface not ready.")
+            return
+
+        online_nodes = self.node_info.get_online_nodes()
+        count = len(online_nodes)
+
+        if count == 0:
+            message = "Warning MTEK cant see any nodes"
+        else:
+            message = f"MTEK has a node count of {count}"
+
+        logging.info(f"Reporting node count: {message}")
+        try:
+            # Send to Channel 2 as requested
+            self.interface.sendText(message, channelIndex=2)
+        except Exception as e:
+            logging.error(f"Failed to report node count: {e}")
+
     def get_global_context(self):
         return {
             'nodes': self.node_db.list_nodes(),
@@ -340,6 +361,7 @@ class MeshtasticBot:
 
     def start_scheduler(self):
         schedule.every().day.at("00:00").do(self.node_info.reset_packets_today)
+        schedule.every().hour.do(self.report_node_count)
         while True:
             schedule.run_pending()
             try:
