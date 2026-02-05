@@ -56,6 +56,7 @@ class MeshtasticBot:
         self.user_prefs_persistence = None
         self.storage_apis = []
         self.pending_traces = {}
+        self.last_report_zero = False
 
         pub.subscribe(self.on_receive, "meshtastic.receive")
         pub.subscribe(self.on_traceroute, "meshtastic.traceroute")
@@ -347,8 +348,10 @@ class MeshtasticBot:
 
         if count == 0:
             message = "Warning MTEK cant see any nodes"
+            self.last_report_zero = True
         else:
             message = f"MTEK has a node count of {count}"
+            self.last_report_zero = False
 
         logging.info(f"Reporting node count: {message}")
         try:
@@ -360,6 +363,21 @@ class MeshtasticBot:
         except Exception as e:
             logging.error(f"Failed to report node count: {e}")
 
+    def check_for_zero_nodes(self):
+        """Checks if the node count is zero and alerts immediately if it transitioned to zero."""
+        if not self.init_complete or not self.interface:
+            return
+
+        online_nodes = self.node_info.get_online_nodes()
+        count = len(online_nodes)
+
+        if count == 0 and not self.last_report_zero:
+            logging.warning("Immediate alert: Node count dropped to zero!")
+            self.report_node_count()
+        elif count > 0:
+            # Reset flag so we can alert again if it drops to zero later
+            self.last_report_zero = False
+
     def get_global_context(self):
         return {
             'nodes': self.node_db.list_nodes(),
@@ -369,7 +387,8 @@ class MeshtasticBot:
 
     def start_scheduler(self):
         schedule.every().day.at("00:00").do(self.node_info.reset_packets_today)
-        schedule.every().hour.do(self.report_node_count)
+        schedule.every(3).hours.do(self.report_node_count)
+        schedule.every(1).minutes.do(self.check_for_zero_nodes)
         while True:
             schedule.run_pending()
             try:
