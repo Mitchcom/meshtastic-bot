@@ -8,7 +8,7 @@ services:
     ports:
       - "4403:4403"
     environment:
-      - MESHTASTIC_IP=${MESHTASTIC_NODE_IP:-192.168.4.210} # Your Meshtastic Node IP here
+      - MESHTASTIC_IP=${MESHTASTIC_NODE_IP} # Your Meshtastic Node IP here
       - STORAGE_API_ROOT=${STORAGE_API_ROOT}
       - STORAGE_API_TOKEN=${STORAGE_API_TOKEN}
       - STORAGE_API_VERSION=${STORAGE_API_VERSION}
@@ -19,4 +19,6 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_API_VERSION=1.44  # Add this line to fix your error
     command: --interval 3600 meshtastic-bot  # Check for updates every hour
