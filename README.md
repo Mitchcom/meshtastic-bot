@@ -86,11 +86,18 @@ The bot listens for messages and responds to commands as a direct message. You c
 | `!hello`  | Displays information about the bot                            |
 | `!ping`   | Responds with "Pong!"                                         |
 | `!nodes`  | Displays a list of connected nodes, stats, etc                |
+| `!nodes totals` | Manually triggers a node count report                        |
 | `!whoami` | Displays information about the sender                         |
 | `!tr`     | Performs a traceroute to the sender (outbound & inbound)      |
 | `!status` | Displays bot status and radio connection details              |
 
 ## Features
+
+### Node Count Reporting
+The bot monitors mesh visibility and provides automated reporting:
+- **Scheduled Reports:** Every 3 hours, a status update is sent to Channel 2 (GregPrivate) with the current online node count.
+- **Immediate Alerts:** If the visible node count drops to zero, the bot sends an immediate warning.
+- **Manual Check:** Use `!nodes totals` to get an instant report via DM.
 
 ### Enhanced Connectivity (TCP Proxy)
 The bot now includes a built-in TCP proxy to manage the connection to the Meshtastic node. This improves stability and allows for automatic reconnection if the radio connection is lost.
