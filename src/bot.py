@@ -336,8 +336,8 @@ class MeshtasticBot:
 
         logging.info(f"- Plus {len(offline_nodes)} offline nodes")
 
-    def report_node_count(self):
-        """Report the current node count to a specific channel."""
+    def report_node_count(self, destination=None, channel_index=2):
+        """Report the current node count to a specific channel or destination."""
         if not self.init_complete or not self.interface:
             logging.warning("Skipping node count report: interface not ready.")
             return
@@ -352,8 +352,11 @@ class MeshtasticBot:
 
         logging.info(f"Reporting node count: {message}")
         try:
-            # Send to Channel 2 (GregPrivate)
-            self.interface.sendText(message, channelIndex=2, wantAck=True)
+            if destination:
+                self.interface.sendText(message, destinationId=destination, wantAck=True)
+            else:
+                # Default to Channel 2 (GregPrivate)
+                self.interface.sendText(message, channelIndex=channel_index, wantAck=True)
         except Exception as e:
             logging.error(f"Failed to report node count: {e}")
 

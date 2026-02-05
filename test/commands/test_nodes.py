@@ -11,6 +11,7 @@ class TestNodesCommand(CommandWSCTestCase):
 
     def setUp(self):
         super().setUp()
+        self.bot.init_complete = True
         self.command = NodesCommand(self.bot)
 
         self.online_count = len(self.bot.node_info.get_online_nodes())
@@ -32,7 +33,7 @@ class TestNodesCommand(CommandWSCTestCase):
             friendly_time = pretty_print_last_heard(last_heard)
             expected_response += f"- {node.user.short_name} ({friendly_time})\n"
 
-        self.assert_message_sent(expected_response, self.test_nodes[1])
+        self.assert_message_sent(expected_response, self.test_nodes[1], want_ack=True)
 
     def test_handle_busy_command(self):
         packet = build_test_text_packet('!nodes busy', self.test_nodes[1].user.id, self.bot.my_id)
@@ -52,7 +53,7 @@ class TestNodesCommand(CommandWSCTestCase):
 
         expected_response += f"(last reset at {last_reset_time})"
 
-        self.assert_message_sent(expected_response, self.test_nodes[1])
+        self.assert_message_sent(expected_response, self.test_nodes[1], want_ack=True)
 
     def test_handle_busy_detailed_command(self):
         packet = build_test_text_packet('!nodes busy detailed', self.test_nodes[1].user.id, self.bot.my_id)
@@ -81,7 +82,32 @@ class TestNodesCommand(CommandWSCTestCase):
         for packet_type, count in sorted_breakdown:
             expected_response += f"- {packet_type}: {count}\n"
 
-        self.assert_message_sent(expected_response, self.test_nodes[1])
+        self.assert_message_sent(expected_response, self.test_nodes[1], want_ack=True)
+
+    def test_handle_totals_command(self):
+        packet = build_test_text_packet('!nodes totals', self.test_nodes[1].user.id, self.bot.my_id)
+        self.command.handle_packet(packet)
+
+        # The command calls bot.report_node_count(destination=from_id)
+        # which sends "MTEK has a node count of X"
+        online_count = len(self.bot.node_info.get_online_nodes())
+        expected_message = f"MTEK has a node count of {online_count}"
+        
+        self.assert_message_sent(expected_message, self.test_nodes[1], want_ack=True)
+
+    def test_handle_totals_channel_command(self):
+        packet = build_test_text_packet('!nodes totals 3', self.test_nodes[1].user.id, self.bot.my_id)
+        self.command.handle_packet(packet)
+
+        # The command calls bot.report_node_count(channel_index=3)
+        online_count = len(self.bot.node_info.get_online_nodes())
+        expected_report = f"MTEK has a node count of {online_count}"
+        
+        # It also replies to the user
+        expected_reply = "Node count report sent to channel 3."
+        
+        self.mock_interface.sendText.assert_any_call(expected_report, channelIndex=3, wantAck=True)
+        self.mock_interface.sendText.assert_any_call(expected_reply, destinationId=self.test_nodes[1].user.id, wantAck=True)
 
 
 if __name__ == '__main__':
