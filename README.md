@@ -1,5 +1,7 @@
 # Meshtastic Bot
 
+### Although this is based on https://github.com/pskillen/meshtastic-bot I have personalised it a lot to my own setup for commands, auto replies and automations etc
+
 Meshtastic Bot is a Python-based bot for interacting with Meshtastic devices. It listens for messages, processes commands, and responds with appropriate actions. This guide is focused on helping you run the bot as-is, with minimal setup.
 
 ## Quick Start: Run with Docker
