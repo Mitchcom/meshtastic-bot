@@ -176,22 +176,20 @@ class MeshtasticBot:
 
         logging.info(f"Received group message on channel '{channel_name}' from {sender_name}: {message}")
 
-        # Allow !tr in public channels
+        # Allow certain commands in public channels
         words = message.split()
-        if words and words[0].lower() == "!tr":
-            logging.info(f"Received public !tr from {sender.long_name if sender else from_id}")
-            # Import here to avoid circular imports if any, though factory is better
+        if words and words[0].lower() in ["!tr", "!ping", "!hello", "!nodes", "!status", "!whoami"]:
+            command_name = words[0].lower()
+            logging.info(f"Received public {command_name} from {sender_name}")
             from src.commands.factory import CommandFactory
-            command_instance = CommandFactory.create_command("!tr", self)
+            command_instance = CommandFactory.create_command(command_name, self)
             if command_instance:
                 try:
-                    # By default commands reply in DM (reply_in_dm).
-                    # If we want public reply, we'd need to modify the command or use reply_in_channel.
-                    # But for now, let's just let it run. It will DM the user back (which is cleaner).
+                    # Commands by default reply via DM (reply_in_dm).
                     command_instance.handle_packet(packet)
                     return # Stop processing responders
                 except Exception as e:
-                    logging.error(f"Error handling public command: {e}")
+                    logging.error(f"Error handling public command {command_name}: {e}")
 
         responder = ResponderFactory.match_responder(message, self)
         if responder:
