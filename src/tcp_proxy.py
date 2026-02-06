@@ -158,7 +158,7 @@ class TcpProxy:
                 elif sock is self.target_socket:
                     last_target_activity = time.time() # Update activity timestamp
                     try:
-                        data = self.target_socket.recv(4096)
+                        data = self.target_socket.recv(16384)
                         if not data:
                             logging.warning("Target closed connection. Restarting proxy connection...")
                             # Close the target socket
@@ -215,7 +215,7 @@ class TcpProxy:
                 else:
                     # Data from a client
                     try:
-                        data = sock.recv(4096)
+                        data = sock.recv(16384)
                         if not data:
                             if sock in self.clients:
                                 self.clients.remove(sock)
