@@ -3,7 +3,7 @@ from meshtastic.protobuf.mesh_pb2 import MeshPacket
 from src.bot import MeshtasticBot
 from src.commands.command import AbstractCommandWithSubcommands
 from src.data_classes import MeshNode
-from src.helpers import pretty_print_last_heard
+from src.helpers import pretty_print_last_heard, get_env_bool
 
 
 class NodesCommand(AbstractCommandWithSubcommands):
@@ -13,7 +13,8 @@ class NodesCommand(AbstractCommandWithSubcommands):
     def __init__(self, bot: MeshtasticBot):
         super().__init__(bot, 'nodes')
         self.sub_commands['busy'] = self.handle_busy
-        self.sub_commands['totals'] = self.handle_totals
+        if get_env_bool('ENABLE_FEATURE_NODE_TOTALS', True):
+            self.sub_commands['totals'] = self.handle_totals
 
     def get_busy_nodes(self) -> list[MeshNode.User]:
         return sorted(self.bot.node_db.list_nodes(),
@@ -109,7 +110,8 @@ class NodesCommand(AbstractCommandWithSubcommands):
         help_text = "!nodes: details about nodes this device has seen\n"
         help_text += "!nodes busy: summary of busiest nodes\n"
         help_text += "!nodes busy detailed: detailed info about busiest nodes\n"
-        help_text += "!nodes totals: report current online node count\n"
+        if get_env_bool('ENABLE_FEATURE_NODE_TOTALS', True):
+            help_text += "!nodes totals: report current online node count\n"
         self.reply(packet, help_text)
 
     def get_command_for_logging(self, message: str) -> (str, list[str] | None, str | None):

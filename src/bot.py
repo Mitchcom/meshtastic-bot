@@ -12,7 +12,7 @@ from requests import HTTPError
 from src.api.StorageAPI import StorageAPIWrapper
 from src.commands.factory import CommandFactory
 from src.data_classes import MeshNode
-from src.helpers import pretty_print_last_heard, safe_encode_node_name
+from src.helpers import pretty_print_last_heard, safe_encode_node_name, get_env_bool
 from src.persistence.commands_logger import AbstractCommandLogger
 from src.persistence.node_db import AbstractNodeDB
 from src.persistence.node_info import AbstractNodeInfoStore
@@ -120,9 +120,10 @@ class MeshtasticBot:
         logging.info('Connected to Meshtastic node')
         self.print_nodes()
         
-        # Send an immediate node count report upon connection
-        # We use a timer to delay slightly to ensure everything settles
-        threading.Timer(10.0, self.report_node_count).start()
+        if get_env_bool('ENABLE_FEATURE_NODE_TOTALS', True):
+            # Send an immediate node count report upon connection
+            # We use a timer to delay slightly to ensure everything settles
+            threading.Timer(10.0, self.report_node_count).start()
 
     def on_receive_text(self, packet: MeshPacket, interface):
         """Callback function triggered when a text message is received."""
@@ -389,8 +390,9 @@ class MeshtasticBot:
 
     def start_scheduler(self):
         schedule.every().day.at("00:00").do(self.node_info.reset_packets_today)
-        schedule.every(3).hours.do(self.report_node_count)
-        schedule.every(1).minutes.do(self.check_for_zero_nodes)
+        if get_env_bool('ENABLE_FEATURE_NODE_TOTALS', True):
+            schedule.every(3).hours.do(self.report_node_count)
+            schedule.every(1).minutes.do(self.check_for_zero_nodes)
         while True:
             schedule.run_pending()
             try:

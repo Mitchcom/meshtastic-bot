@@ -26,6 +26,7 @@ STORAGE_API_2_TOKEN=your_storage_api_2_token
 
 # Feature Toggles
 ENABLE_TCP_PROXY=true
+ENABLE_FEATURE_NODE_TOTALS=true
 
 # Command Toggles (set to false to disable)
 ENABLE_COMMAND_PING=true
@@ -72,6 +73,7 @@ You can enable or disable specific features and commands using environment varia
 
 ### Feature Toggles
 - `ENABLE_TCP_PROXY`: Set to `false` to disable the internal TCP proxy. The bot will connect directly to `MESHTASTIC_IP`.
+- `ENABLE_FEATURE_NODE_TOTALS`: Set to `false` to disable the automated node count reporting and the `!nodes totals` command.
 
 ### Command Toggles
 Set any of the following to `false` to disable the command and hide it from the `!help` menu:

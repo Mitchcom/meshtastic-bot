@@ -60,6 +60,7 @@ def main():
     logging.info(f"--- Configuration ---")
     logging.info(f"MESHTASTIC_IP: {MESHTASTIC_IP}")
     logging.info(f"ENABLE_TCP_PROXY: {ENABLE_TCP_PROXY}")
+    logging.info(f"ENABLE_FEATURE_NODE_TOTALS: {get_env_bool('ENABLE_FEATURE_NODE_TOTALS', True)}")
     logging.info(f"ENABLE_COMMAND_PING: {get_env_bool('ENABLE_COMMAND_PING', True)}")
     logging.info(f"ENABLE_COMMAND_TR: {get_env_bool('ENABLE_COMMAND_TR', True)}")
     logging.info(f"---------------------")
