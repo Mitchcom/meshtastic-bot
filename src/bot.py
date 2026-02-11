@@ -148,10 +148,14 @@ class MeshtasticBot:
         command_instance = CommandFactory.create_command(command_name, self)
         if command_instance:
             self.command_logger.log_command(from_id, command_instance, message)
-            try:
-                command_instance.handle_packet(packet)
-            except Exception as e:
-                logging.error(f"Error handling message: {e}")
+            
+            def run_cmd():
+                try:
+                    command_instance.handle_packet(packet)
+                except Exception as e:
+                    logging.error(f"Error handling message: {e}")
+            
+            threading.Thread(target=run_cmd, daemon=True).start()
         else:
             self.command_logger.log_unknown_request(from_id, message)
 
@@ -189,12 +193,15 @@ class MeshtasticBot:
                     from src.commands.factory import CommandFactory
                     command_instance = CommandFactory.create_command(command_name, self)
                     if command_instance:
-                        try:
-                            # Commands by default reply via DM (reply_in_dm).
-                            command_instance.handle_packet(packet)
-                            return # Stop processing responders
-                        except Exception as e:
-                            logging.error(f"Error handling public command {command_name}: {e}")
+                        def run_public_cmd():
+                            try:
+                                # Commands by default reply via DM (reply_in_dm).
+                                command_instance.handle_packet(packet)
+                            except Exception as e:
+                                logging.error(f"Error handling public command {command_name}: {e}")
+                        
+                        threading.Thread(target=run_public_cmd, daemon=True).start()
+                        return # Stop processing responders
 
         responder = ResponderFactory.match_responder(message, self)
         if responder:

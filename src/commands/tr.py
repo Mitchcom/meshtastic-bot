@@ -27,15 +27,19 @@ class TracerouteCommand(AbstractCommand):
         response = f"{sender_name} you are {hops_away} hops away (Signal: {snr} dB). Starting full traceroute..."
         self.reply_in_dm(packet, response)
         
-        # Initiate actual traceroute
-        self.bot.pending_traces[sender_id] = sender_id
-        try:
-            logging.info(f"Initiating traceroute to {sender_id}")
-            # hopLimit=7 is standard max
-            self.bot.interface.sendTraceRoute(sender_id, hopLimit=7)
-        except Exception as e:
-            logging.error(f"Failed to send traceroute to {sender_id}: {e}")
-            self.reply_in_dm(packet, f"Error starting traceroute: {e}")
+        # Initiate actual traceroute in a separate thread to avoid blocking
+        def run_traceroute():
+            self.bot.pending_traces[sender_id] = sender_id
+            try:
+                logging.info(f"Initiating traceroute to {sender_id}")
+                # hopLimit=7 is standard max
+                self.bot.interface.sendTraceRoute(sender_id, hopLimit=7)
+            except Exception as e:
+                logging.error(f"Failed to send traceroute to {sender_id}: {e}")
+                self.reply_in_dm(packet, f"Error starting traceroute: {e}")
+
+        import threading
+        threading.Thread(target=run_traceroute, daemon=True).start()
 
     def get_command_for_logging(self, message: str) -> (str, list[str] | None, str | None):
         return self._gcfl_just_base_command(message)
