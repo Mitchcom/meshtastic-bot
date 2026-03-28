@@ -29,6 +29,7 @@ class StorageAPIWrapper(BaseAPIWrapper):
         if args is None:
             args = {}
             
+        my_nodenum = self.bot.my_nodenum
         if self.api_version == 1:
             api_paths = {
                 'raw_packet': '/api/raw-packet/',
@@ -36,7 +37,6 @@ class StorageAPIWrapper(BaseAPIWrapper):
                 'node_by_id': f'/api/nodes/{args.get("node_id", "")}',
             }
         else:
-            my_nodenum = self.bot.my_nodenum
             api_paths = {
                 'raw_packet': f'/api/packets/{my_nodenum}/ingest/',
                 'nodes': f'/api/packets/{my_nodenum}/nodes/',
@@ -65,14 +65,28 @@ class StorageAPIWrapper(BaseAPIWrapper):
         """
         Store a raw packet in the storage API
         """
+        if self.api_version == 2 and (self.bot.my_nodenum is None or self.bot.my_nodenum <= 0):
+            logging.debug("Skipping store_raw_packet: Bot node number not yet initialized.")
+            return
+
+        logging.info(f"store_raw_packet called for portnum: {packet.get('decoded', {}).get('portnum')}")
         # Filter out packet types that the API doesn't support or we don't want to store
-        ignored_ports = [345, 'ROUTING_APP', 'TRACEROUTE_APP', 'ADMIN_APP', 'NEIGHBORINFO_APP']
+        ignored_ports = [345, 'TRACEROUTE_APP', 'ADMIN_APP', 'NEIGHBORINFO_APP', 'ROUTING_APP']
         portnum = packet.get('decoded', {}).get('portnum')
         if portnum in ignored_ports:
             return
             
         # Additional filtering for Telemetry packets to avoid API errors
         # The API requires either 'deviceMetrics' or 'localStats'
+        if portnum == 'ROUTING_APP':
+            from_id = packet.get('from')
+            logging.info(f"DEBUG: ROUTING_APP Packet from {from_id}: {packet}")
+        
+        # Log all text messages
+        if portnum == 'TEXT_MESSAGE_APP':
+            from_id = packet.get('from')
+            logging.info(f"DEBUG: TEXT_MESSAGE_APP Packet from {from_id}: {packet}")
+
         if portnum == 'TELEMETRY_APP':
             telemetry = packet.get('decoded', {}).get('telemetry', {})
             if 'deviceMetrics' not in telemetry and 'localStats' not in telemetry:
@@ -88,31 +102,44 @@ class StorageAPIWrapper(BaseAPIWrapper):
         if raw_packet:
             if 'channel' not in packet:
                 packet['channel'] = raw_packet.channel
+            if 'id' not in packet:
+                packet['id'] = raw_packet.id
+            if 'from' not in packet:
+                packet['from'] = raw_packet.from_node
 
-        logging.debug(f"Storing packet: {packet}")
+        logging.info(f"Storing packet: {packet}")
         try:
             response = self._post(self._get_url('raw_packet'), json=packet)
-        except HTTPError as ex:
-            logging.error(f"Error storing packet: {ex.response.text}")
-            logging.error(f"Packet: {packet}")
 
-            # Dump the packet to a .json file
+            try:
+                response_json = response.json()
+                logging.info(f"API Response ({response.status_code}): {response_json}")
+                return response_json
+            except JSONDecodeError:
+                logging.info(f"API Response ({response.status_code}, not JSON): {response.text}")
+                return {'text': response.text}
+
+        except HTTPError as ex:
+            logging.error(f"HTTP error storing packet: {ex.response.text}")
+            logging.error(f"Packet: {packet}")
             if self.failed_packets_dir:
                 self._dump_failed_packet(packet, ex)
             return
 
-        try:
-            response_json = response.json()
-            logging.debug(f"Response: {response_json}")
-            return response_json
-        except JSONDecodeError:
-            logging.debug(f"Response (not JSON): {response.text}")
-            return {'text': response.text}
+        except Exception as ex:
+            logging.error(f"Error storing packet: {ex}")
+            logging.error(f"Packet: {packet}")
+            if self.failed_packets_dir:
+                self._dump_failed_packet(packet, ex)
+            return
 
     def list_nodes(self) -> list[MeshNode]:
         """
         Get a list of all nodes stored in the storage API. This list generally does not include position or metrics data.
         """
+        if self.api_version == 2 and (self.bot.my_nodenum is None or self.bot.my_nodenum <= 0):
+            return []
+
         response = self._get(self._get_url('nodes'))
         response_json = response.json()
 
@@ -124,6 +151,9 @@ class StorageAPIWrapper(BaseAPIWrapper):
 
         If the node contains position or metrics data, it will be stored as well
         """
+        if self.api_version == 2 and (self.bot.my_nodenum is None or self.bot.my_nodenum <= 0):
+            logging.debug("Skipping store_node: Bot node number not yet initialized.")
+            return
 
         node_data = MeshNodeSerializer.to_api_dict(node)
 

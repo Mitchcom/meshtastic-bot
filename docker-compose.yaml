@@ -13,6 +13,9 @@ services:
       - STORAGE_API_TOKEN=${STORAGE_API_TOKEN}
       - STORAGE_API_VERSION=${STORAGE_API_VERSION}
       - ENABLE_TCP_PROXY=${ENABLE_TCP_PROXY:-true}
+      - ENABLE_FEATURE_NODE_TOTALS=${ENABLE_FEATURE_NODE_TOTALS:-true}
+      - FREQUENCY_OF_NODE_REPORTS=${FREQUENCY_OF_NODE_REPORTS:-3}
+      - CHANNEL_FOR_NODE_TOTAL_BROADCAST=${CHANNEL_FOR_NODE_TOTAL_BROADCAST:-2}
       - ENABLE_COMMAND_PING=${ENABLE_COMMAND_PING:-true}
       - ENABLE_COMMAND_TR=${ENABLE_COMMAND_TR:-true}
       - ENABLE_COMMAND_HELLO=${ENABLE_COMMAND_HELLO:-true}
@@ -22,6 +25,8 @@ services:
       - ENABLE_COMMAND_PREFS=${ENABLE_COMMAND_PREFS:-true}
       - ENABLE_COMMAND_ADMIN=${ENABLE_COMMAND_ADMIN:-true}
       - ENABLE_COMMAND_STATUS=${ENABLE_COMMAND_STATUS:-true}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
 
   watchtower:
     image: containrrr/watchtower
@@ -29,4 +34,6 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 3600 meshtastic-bot  # Check for updates every hour
+    environment:
+      - DOCKER_API_VERSION=1.44
+    command: --interval 3600 --label-enable

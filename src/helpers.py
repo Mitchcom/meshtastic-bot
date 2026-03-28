@@ -11,7 +11,20 @@ def get_env_bool(name: str, default: bool = True) -> bool:
     return value.lower() in ('true', '1', 't', 'y', 'yes')
 
 
-def pretty_print_last_heard(last_heard_timestamp: int | datetime) -> str:
+def get_env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def pretty_print_last_heard(last_heard_timestamp: int | datetime | None) -> str:
+    if not last_heard_timestamp:
+        return "never"
+
     if not isinstance(last_heard_timestamp, datetime):
         last_heard = datetime.fromtimestamp(last_heard_timestamp, timezone.utc)
     else:

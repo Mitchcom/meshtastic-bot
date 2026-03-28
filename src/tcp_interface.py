@@ -30,7 +30,7 @@ class SupportsMessageReactionInterface(TCPInterface):
         packet.decoded.portnum = portNum
         packet.decoded.payload = emoji_bytes
         packet.decoded.reply_id = messageId
-        packet.decoded.emoji = True
+        packet.decoded.emoji = ord(emoji) if isinstance(emoji, str) else 1
 
         self._sendPacket(packet, destinationId,
                          wantAck=wantAck,
@@ -62,20 +62,42 @@ class AutoReconnectTcpInterface(SupportsMessageReactionInterface, TCPInterface):
         # Store packets in a queue and resend them after reconnecting
         # This will involve exposing the queue, and reloading the queue in bot.py since we create a new interface object
 
-    def onResponseTraceRoute(self, packet, routeDiscovery):
+    def onResponseTraceRoute(self, packet):
         """
         Callback for when a traceroute response is received.
         """
-        super().onResponseTraceRoute(packet, routeDiscovery)
-        pub.sendMessage("meshtastic.traceroute", packet=packet, route=routeDiscovery)
+        try:
+            route_discovery = None
+            if isinstance(packet, dict):
+                decoded = packet.get('decoded', {})
+                # It might be in 'routing', 'routing_app', or 'traceroute'
+                route_discovery = decoded.get('routing') or decoded.get('routing_app') or decoded.get('traceroute')
+                
+                if not route_discovery and 'payload' in decoded:
+                    logging.debug(f"onResponseTraceRoute: Route not found in decoded, full packet: {packet}")
+            elif hasattr(packet, 'decoded'):
+                route_discovery = getattr(packet.decoded, 'routing', 
+                                          getattr(packet.decoded, 'routing_app', 
+                                                  getattr(packet.decoded, 'traceroute', None)))
+
+            logging.info(f"onResponseTraceRoute: Received traceroute response. Route data present: {route_discovery is not None}")
+            logging.info(f"DEBUG: Traceroute packet keys: {packet.keys() if isinstance(packet, dict) else 'not a dict'}")
+            
+            # Always call super to allow library internal processing (printing to stdout etc)
+            super().onResponseTraceRoute(packet)
+            
+            # Notify bot logic
+            pub.sendMessage("meshtastic.traceroute", packet=packet, route=route_discovery)
+        except Exception as e:
+            logging.error(f"Error in onResponseTraceRoute: {e}", exc_info=True)
 
     def sendHeartbeat(self):
         try:
             super().sendHeartbeat()
         except (OSError, BrokenPipeError) as e:
             logging.error(f"Heartbeat failed: {e}")
-            # TODO: Decide if we want to handle the error on this thread
-            # self._reconnect_with_backoff()
+            # Shutdown and notify the error handler to trigger a clean restart from the main thread.
+            # This avoids nested reconnection attempts on the heartbeat thread.
             self._shutdown_and_call_error_handler()
 
     def _sendPacket(
@@ -87,7 +109,8 @@ class AutoReconnectTcpInterface(SupportsMessageReactionInterface, TCPInterface):
             pkiEncrypted: Optional[bool] = False,
             publicKey: Optional[bytes] = None,
     ):
-        logging.debug(f"Sending packet to {destinationId} (Payload: {meshPacket.decoded.payload})")
+        port_val = meshPacket.decoded.portnum
+        logging.info(f"_sendPacket: Attempting to send Port {port_val} to {destinationId} (wantAck={wantAck})")
         try:
             super()._sendPacket(
                 meshPacket=meshPacket,
@@ -97,11 +120,15 @@ class AutoReconnectTcpInterface(SupportsMessageReactionInterface, TCPInterface):
                 pkiEncrypted=pkiEncrypted,
                 publicKey=publicKey
             )
+            logging.info(f"_sendPacket: Successfully handed Port {port_val} to {destinationId} to meshtastic library")
         except (OSError, BrokenPipeError) as e:
-            logging.error(f"sendPacket failed: {e}")
+            logging.error(f"_sendPacket failed (connection error): {e}")
             self.packet_queue.put((meshPacket, destinationId, wantAck, hopLimit, pkiEncrypted, publicKey))
-            # self._reconnect_with_backoff()
             self._shutdown_and_call_error_handler(e)
+        except Exception as e:
+            logging.error(f"_sendPacket failed (unexpected error): {e}", exc_info=True)
+            # We still queue it just in case it's recoverable
+            self.packet_queue.put((meshPacket, destinationId, wantAck, hopLimit, pkiEncrypted, publicKey))
 
     def _shutdown_and_call_error_handler(self, conn_error: Optional[Exception] = None):
         try:
